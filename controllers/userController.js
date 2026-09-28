@@ -1,5 +1,6 @@
 const { User } = require("../models");
 const validator = require("validator");
+const bcrypt = require("bcrypt");
 
 exports.getUserProfile = async (req, res) => {
   const user = req.user;
@@ -17,9 +18,9 @@ exports.getUserProfile = async (req, res) => {
 
 exports.updateUserProfile = async (req, res) => {
   const user = req.user;
-  let { nickname, status, status_message } = req.body;
+  let { nickname, status, status_message, new_password, confirm_password } = req.body;
 
-  if (typeof nickname != undefined && nickname != null) {
+  if (typeof nickname != "undefined" && nickname != null) {
     if (!validator.isLength(nickname, { min: 3, max: 20 })) {
       return res
         .status(400)
@@ -27,12 +28,29 @@ exports.updateUserProfile = async (req, res) => {
     }
     nickname = validator.escape(nickname);
   } else nickname = user.nickname;
-  if (typeof status != undefined && status != null) {
+
+
+  if (typeof new_password != "undefined" && new_password != null) {
+    if (!validator.isLength(new_password, { min: 6 })) {
+      return res
+        .status(400)
+        .json({ error: "Password must be at least 6 characters long." });
+    }
+    if (typeof confirm_password === "undefined" || !await bcrypt.compare(confirm_password+user.salt,user.password_hash)) {
+      return res
+        .status(400)
+        .json({ error: "To change the password, you must enter your current password." })
+    }
+    password = bcrypt.hash(validator.escape(new_password) + user.salt, 10);
+  } else password = user.password_hash;
+
+
+  if (typeof status != "undefined" && status != null) {
     if (!validator.isIn(status, ["active", "offline", "inactive", "busy"])) {
       return res.status(400).json({ error: "Invalid status." });
     }
   } else status = user.status;
-  if (typeof status_message != undefined && status_message != null) {
+  if (typeof status_message != "undefined" && status_message != null) {
     if (!validator.isLength(status_message, { max: 200 })) {
       return res
         .status(400)
@@ -43,6 +61,7 @@ exports.updateUserProfile = async (req, res) => {
   user.nickname = nickname;
   user.status = status;
   user.status_message = status_message;
+  user.password_hash = password;
   await user.save();
 
   res.json({
@@ -101,13 +120,13 @@ exports.getUserById = async (req, res) => {
 
 exports.updateUserById = async (req, res) => {
   const userId = req.params.id;
-  const { nickname, status, status_message, _admin } = req.body;
+  let { nickname, status, status_message, _admin, password } = req.body;
   const user = await User.findByPk(userId);
   if (!user) {
     return res.status(404).json({ message: "User not found" });
   }
 
-  if (typeof nickname != undefined && nickname != null) {
+  if (typeof nickname != "undefined" && nickname != null) {
     if (!validator.isLength(nickname, { min: 3, max: 20 })) {
       return res
         .status(400)
@@ -116,13 +135,13 @@ exports.updateUserById = async (req, res) => {
     nickname = validator.escape(nickname);
   } else nickname = user.nickname;
 
-  if (typeof status != undefined && status != null) {
+  if (typeof status != "undefined" && status != null) {
     if (!validator.isIn(status, ["active", "offline", "inactive", "busy"])) {
       return res.status(400).json({ error: "Invalid status." });
     }
   } else status = user.status;
 
-  if (typeof status_message != undefined && status_message != null) {
+  if (typeof status_message != "undefined" && status_message != null) {
     if (!validator.isLength(status_message, { max: 200 })) {
       return res
         .status(400)
@@ -131,16 +150,27 @@ exports.updateUserById = async (req, res) => {
     status_message = validator.escape(status_message);
   } else status_message = user.status_message;
 
+  if (typeof password != "undefined" && password != null) {
+    if (!validator.isLength(password, { min: 6 })) {
+      return res
+        .status(400)
+        .json({ error: "Password must be at least 6 characters long." });
+    }
+    password = await bcrypt.hash(validator.escape(password) + user.salt, 10);
+  } else password = user.password_hash;
+
+
   if (typeof _admin != undefined && _admin != null) {
-    if (!validator.isBoolean(_admin, {loose: true})) {
+    if (!validator.isBoolean(_admin, { loose: true })) {
       return res
         .status(400)
         .json({ error: "Admin value must be a True or False!" });
-    } else _admin = user._admin;
-  }
+    }
+  } else _admin = user._admin;
   user.nickname = nickname;
   user.status = status;
   user.status_message = status_message;
+  user.password_hash = password;
   user._admin = _admin;
   await user.save();
 

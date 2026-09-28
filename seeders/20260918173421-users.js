@@ -1,14 +1,15 @@
 'use strict';
 const { faker } = require('@faker-js/faker');
-
-function generateRandomUser() {
+const bcrypt = require("bcrypt");
+async function generateRandomUser() {
   const username = faker.internet.username();
   const nickname = faker.person.firstName();
   const statusOptions = ['active', 'inactive', 'busy', 'offline'];
   const status = faker.helpers.arrayElement(statusOptions);
   const statusMessage = faker.lorem.sentence();
-  const passwordHash = faker.internet.password();
+  const password = faker.internet.password();
   const salt = faker.string.alphanumeric(16);
+  const passwordHash = await bcrypt.hash(password + salt, 10);
   const admin = faker.datatype.boolean();
   const lastLogin = faker.date.recent();
 
@@ -40,7 +41,7 @@ module.exports = {
      * }], {});
     */
    for (let i = 0; i < 10; i++) {
-    const user = generateRandomUser();
+    const user = await generateRandomUser();
     await queryInterface.bulkInsert('users', [user], {});
   }
    await queryInterface.bulkInsert('users', [
@@ -49,7 +50,7 @@ module.exports = {
       nickname: 'Admin',
       status: 'active',
       status_message: 'I am the admin!',
-      password_hash: 'hashed_password',
+      password_hash: await bcrypt.hash("adminpasswordrandom_salt", 10),
       salt: 'random_salt',
       _deleted: false,
       _admin: true,
