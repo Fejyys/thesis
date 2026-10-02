@@ -3,7 +3,7 @@
 const jwt = require('jsonwebtoken');
 const { UniqueConstraintError } = require('sequelize');
 const { Channel, User, sequelize } = require('../models');
-
+require('dotenv').config();
 const inviteIssuer = 'thesis-api';
 const inviteAudience = 'channel-invite';
 const inviteTtl = process.env.INVITE_TOKEN_TTL || '7d';
@@ -114,8 +114,7 @@ exports.getChannelMembers = async (req, res) => {
 	}
 
 	const members = await channel.getUsers({
-		attributes: ['id', 'username', 'nickname', 'status'],
-		joinTableAttributes: []
+		attributes: ['id', 'username', 'nickname', 'status']
 	});
 	res.json(members);
 };
