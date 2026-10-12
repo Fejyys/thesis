@@ -71,6 +71,7 @@ exports.getChannelByID = async (req, res) => {
 
 exports.createChannel = async (req, res) => {
 	const name = typeof (req.body || {}).name === 'string' ? req.body.name.trim() : '';
+	const participants = req.participants;
 	if (!name || name.length > 100) {
 		return res.status(400).json({ message: 'Channel name must be between 1 and 100 characters' });
 	}
@@ -81,6 +82,14 @@ exports.createChannel = async (req, res) => {
 			{ transaction: t }
 		);
 		await createdChannel.addUser(req.user, { transaction: t });
+		for (const participant in participants) {
+			let user = User.findByPk(participant)
+			if(user)
+			{
+				await createdChannel.addUser(user, { transaction: t});
+			}
+			
+		}
 		return createdChannel;
 	});
 	res.status(201).json(channel);
