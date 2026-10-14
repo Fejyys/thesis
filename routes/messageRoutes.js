@@ -1,12 +1,20 @@
 const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../middlewares/authMiddleware');
-const channelController = require('../controllers/channelController');
+const adminMiddleware = require('../middlewares/adminMiddleware');
+const messageController = require('../controllers/messageController');
 
 router.use(authMiddleware);
 
-// TODO: Messages
-// See All messages, see by channel, post new message, edit message, delete message
+router.get('/', messageController.getMessages);
 
-router.get('/')
+router.post('/:id/file', messageController.createFileMessage);
+router.put('/:id/:messageId', messageController.updateMessage);
+router.delete('/:id/:messageId', messageController.deleteMessage);
+router.post('/:id', messageController.createTextMessage);
+router.get('/:id', messageController.getMessagesByChannel);
+
+router.use(adminMiddleware);
+router.get('/user/:id', messageController.getMessagesByUser);
+
 module.exports = router;

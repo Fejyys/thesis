@@ -56,7 +56,7 @@ const requireOwner = async (req, res) => {
 exports.getAllChannels = async (req, res) => {
     const user = req.user;
     const channels = user._admin ? await Channel.findAll() : await user.getChannels();
-    res.json(channels);
+    res.status(200).json(channels);
 }
 
 exports.getChannelByID = async (req, res) => {
