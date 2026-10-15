@@ -7,6 +7,8 @@ module.exports = (sequelize, DataTypes) => {
             // define association here
             User.belongsToMany(models.Channel, { through: 'user_channel', foreignKey: 'user_id', otherKey: 'channel_id' });
             User.hasMany(models.Message, { foreignKey: 'user_id', as: 'messages' });
+            User.hasMany(models.UserUserRelation, { foreignKey: 'user_id', as: 'relations' });
+            User.hasMany(models.UserUserRelation, { foreignKey: 'related_user_id', as: 'recievedRelations' });
         }
     }
     User.init({

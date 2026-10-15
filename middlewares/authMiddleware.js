@@ -16,7 +16,9 @@ module.exports = async (req, res, next) => {
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
-
+        if (user._deleted) {
+            return res.status(403).json({ message: 'User account is deleted' });
+        }
         req.user = user;
         next();
     } catch (error) {

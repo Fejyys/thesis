@@ -5,14 +5,17 @@ const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const channelRoutes = require('./routes/channelRoutes');
 const messageRoutes = require('./routes/messageRoutes');
+const relationRoutes = require('./routes/relationRoutes');
 const { Server } = require('socket.io');
 const configureChannelSockets = require('./sockets/channelSockets');
+
 app.use(express.json());
 
 app.use('/auth', authRoutes);
 app.use('/users', userRoutes);
 app.use('/channels', channelRoutes);
 app.use('/messages', messageRoutes);
+app.use('/relations', relationRoutes);
 app.use((req, res, next) => {
     res.status(404).json({ message: 'Route not found' });
 }

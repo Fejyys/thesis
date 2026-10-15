@@ -2,7 +2,7 @@
 
 const jwt = require('jsonwebtoken');
 const { UniqueConstraintError } = require('sequelize');
-const { Channel, User, sequelize } = require('../models');
+const { Channel, User, sequelize, UserUserRelation } = require('../models');
 require('dotenv').config();
 const inviteIssuer = 'thesis-api';
 const inviteAudience = 'channel-invite';
@@ -71,22 +71,45 @@ exports.getChannelByID = async (req, res) => {
 
 exports.createChannel = async (req, res) => {
 	const name = typeof (req.body || {}).name === 'string' ? req.body.name.trim() : '';
-	const participants = req.participants;
+	const participants = req.body.participants;
 	if (!name || name.length > 100) {
 		return res.status(400).json({ message: 'Channel name must be between 1 and 100 characters' });
 	}
-
+	if (!Array.isArray(participants) || participants.some(p => typeof p !== 'number' && (typeof p !== 'string' || !/^[1-9]\d*$/.test(p)))) {
+		return res.status(400).json({ message: 'Participants must be an array of valid user IDs' });
+	}
+	if (!participants || participants.length === 0) {
+		return res.status(400).json({ message: 'Atleast one participant is required to create a channel' });
+	}
 	const channel = await sequelize.transaction(async t => {
 		const createdChannel = await Channel.create(
 			{ name, admin_id: req.user.id },
 			{ transaction: t }
 		);
 		await createdChannel.addUser(req.user, { transaction: t });
-		for (const participant in participants) {
-			let user = User.findByPk(participant)
+		for (const participant of participants) {
+			let user = await User.findByPk(participant)
 			if(user)
 			{
-				await createdChannel.addUser(user, { transaction: t});
+				if(await UserUserRelation.findOne({
+					where: {
+						user_id: req.user.id,
+						related_user_id: participant,
+						relation_type: 'blocked'
+												}}) || 
+					await UserUserRelation.findOne({
+					where: {
+						user_id: participant,
+						related_user_id: req.user.id,
+						relation_type: 'blocked'
+					}}))
+				{
+					continue;
+				}
+				else 
+				{
+					await createdChannel.addUser(user, { transaction: t });
+				}
 			}
 			
 		}

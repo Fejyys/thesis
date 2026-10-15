@@ -74,8 +74,8 @@ exports.register = async (req, res) => {
     if (existingUser) {
       return res.status(409).json({ message: "Username already exists" });
     }
-    salt = await bcrypt.genSalt(5);
-    user = await User.create({
+    let salt = await bcrypt.genSalt(5);
+    let user = await User.create({
       username,
       nickname: username,
       password_hash: await bcrypt.hash(password + salt, 10),

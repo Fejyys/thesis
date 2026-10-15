@@ -41,7 +41,7 @@ exports.updateUserProfile = async (req, res) => {
         .status(400)
         .json({ error: "To change the password, you must enter your current password." })
     }
-    password = bcrypt.hash(validator.escape(new_password) + user.salt, 10);
+    password = await bcrypt.hash(validator.escape(new_password) + user.salt, 10);
   } else password = user.password_hash;
 
 
@@ -160,7 +160,7 @@ exports.updateUserById = async (req, res) => {
   } else password = user.password_hash;
 
 
-  if (typeof _admin != undefined && _admin != null) {
+  if (typeof _admin != "undefined" && _admin != null) {
     if (!validator.isBoolean(_admin, { loose: true })) {
       return res
         .status(400)
@@ -216,7 +216,7 @@ exports.getUserMessages = async (req, res) => {
     return res.status(404).json({ message: "User not found" });
   }
   const messages = await user.getMessages({
-    attributes: ["id", "body", "createdAt"],
+    attributes: ["id", "body", "file", "createdAt"],
   });
   res.json(messages);
 };

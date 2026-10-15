@@ -4,7 +4,6 @@ const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
     class Channel extends Model {
         static associate(models) {
-            // Define associations here
             Channel.belongsTo(models.User, { foreignKey: 'admin_id', as: 'admin' });
             Channel.belongsToMany(models.User, { through: 'user_channel', foreignKey: 'channel_id', otherKey: 'user_id' });
             Channel.hasMany(models.Message, { foreignKey: 'channel_id', as: 'messages' });
