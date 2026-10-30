@@ -1,6 +1,11 @@
 const http = require('http');
 const express = require('express');
+require('dotenv').config();
 const app = express();
+const configuredFrontendOrigins = (process.env.FRONTEND_ORIGINS || '')
+    .split(',')
+    .map(origin => origin.trim())
+    .filter(Boolean);
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const channelRoutes = require('./routes/channelRoutes');
@@ -8,6 +13,32 @@ const messageRoutes = require('./routes/messageRoutes');
 const relationRoutes = require('./routes/relationRoutes');
 const { Server } = require('socket.io');
 const configureChannelSockets = require('./sockets/channelSockets');
+
+app.use((req, res, next) => {
+    const origin = req.get('Origin');
+    if (!origin) return next();
+
+    let frontendUrl;
+    try {
+        frontendUrl = new URL(origin);
+    } catch {
+        return res.status(403).json({ message: 'Origin not allowed' });
+    }
+
+    const isLocalDevelopmentOrigin =
+        ['http:', 'https:'].includes(frontendUrl.protocol) &&
+        ['localhost', '127.0.0.1', '[::1]'].includes(frontendUrl.hostname);
+    if (!isLocalDevelopmentOrigin && !configuredFrontendOrigins.includes(origin)) {
+        return res.status(403).json({ message: 'Origin not allowed' });
+    }
+
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    if (req.method === 'OPTIONS') return res.sendStatus(204);
+    next();
+});
 
 app.use(express.json());
 
