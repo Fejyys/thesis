@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../middlewares/authMiddleware');
 const adminMiddleware = require('../middlewares/adminMiddleware');
+const downloadMiddleware = require('../middlewares/downloadMiddleware');
 const messageController = require('../controllers/messageController');
 
 router.use(authMiddleware);
@@ -9,6 +10,7 @@ router.use(authMiddleware);
 router.get('/', messageController.getMessages);
 
 router.post('/:id/file', messageController.createFileMessage);
+router.get('/:messageId/file', downloadMiddleware, messageController.downloadFile);
 router.put('/:id/:messageId', messageController.updateMessage);
 router.delete('/:id/:messageId', messageController.deleteMessage);
 router.post('/:id', messageController.createTextMessage);

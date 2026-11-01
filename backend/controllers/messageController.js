@@ -17,7 +17,7 @@ const storage = multer.diskStorage({
         cb(null, uploadDir);
     },
     filename: function (req, file, cb) {
-        cb(null, file.originalname);
+        cb(null, crypto.randomBytes(16).toString('hex'));
     }
 });
 const upload = multer({ storage: storage, limits: { fileSize: 10 * 1024 * 1024 } });
@@ -69,7 +69,8 @@ exports.createFileMessage = async (req, res) => {
             user_id: req.user.id,
             channel_id: channel.id,
             body: '',
-            file: true
+            file: true,
+            filename: req.file.originalname,
         });
 
         const finalFileName = crypto.createHash('sha256').update(message.id.toString()).digest('hex') + ext;
@@ -86,6 +87,22 @@ exports.createFileMessage = async (req, res) => {
         res.status(201).json(message);
     });
 }
+
+exports.downloadFile = (req, res, next) => {
+    const message = res.locals.message;
+    const storedFilename = path.basename(message.body.replace(/[\\/]/g, '/'));
+    const filePath = path.join(uploadDir, storedFilename);
+    const downloadName = message.filename || storedFilename;
+
+    res.download(filePath, downloadName, error => {
+        if (!error) return;
+        if (res.headersSent) return next(error);
+        if (error.code === 'ENOENT') {
+            return res.status(404).json({ message: 'File not found' });
+        }
+        next(error);
+    });
+};
 
 exports.getMessagesByChannel = async (req, res) => {
     let channel = await Channel.findByPk(req.params.id);

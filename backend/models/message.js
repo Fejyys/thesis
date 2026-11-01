@@ -30,7 +30,11 @@ module.exports = (sequelize, DataTypes) => {
         file: {
             type: DataTypes.BOOLEAN,
             allowNull: false,
-            defaultValue: false
+            defaultValue: false,
+        },
+        filename: {
+            type: DataTypes.STRING,
+            allowNull: true
         }
     }, {
         sequelize,

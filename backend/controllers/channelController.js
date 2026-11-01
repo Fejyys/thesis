@@ -79,7 +79,7 @@ exports.createChannel = async (req, res) => {
 		return res.status(400).json({ message: 'Participants must be an array of valid user IDs' });
 	}
 	if (!participants || participants.length === 0) {
-		return res.status(400).json({ message: 'Atleast one participant is required to create a channel' });
+		return res.status(400).json({ message: 'At least one participant is required to create a channel' });
 	}
 	const channel = await sequelize.transaction(async t => {
 		const createdChannel = await Channel.create(
@@ -112,6 +112,10 @@ exports.createChannel = async (req, res) => {
 				}
 			}
 			
+		}
+		if(await createdChannel.countUsers({ transaction: t }) < 2) {
+			createdChannel.destroy({ transaction: t });
+			return res.status(400).json({ message: 'At least one valid participant is required to create a channel' });
 		}
 		return createdChannel;
 	});

@@ -24,7 +24,8 @@ module.exports = {
           created_at: new Date(),
           updated_at: new Date()
         };
-        await queryInterface.bulkInsert('user_channel', [userChannel], {});
+        await queryInterface.bulkInsert('user_channel', [userChannel],  { updateOnDuplicate: ['user_id', 'channel_id'] });
+        
       }
     }
   },
