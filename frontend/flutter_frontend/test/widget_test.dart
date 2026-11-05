@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:flutter_frontend/main.dart';
+import 'package:flutter_frontend/register_route.dart';
 
 void main() {
   testWidgets('registration form shows fields and validates empty submit', (

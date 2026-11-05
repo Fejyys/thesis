@@ -112,7 +112,7 @@ exports.getUserById = async (req, res) => {
       "createdAt",
     ],
   });
-  if (!user) {
+  if (!user || user._deleted) {
     return res.status(404).json({ message: "User not found" });
   }
   res.json(user);

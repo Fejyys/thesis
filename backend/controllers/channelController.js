@@ -70,7 +70,7 @@ exports.getChannelByID = async (req, res) => {
 };
 
 exports.createChannel = async (req, res) => {
-	const name = typeof (req.body || {}).name === 'string' ? req.body.name.trim() : '';
+	const name = typeof (req.body ?? {}).name === 'string' ? req.body.name.trim() : '';
 	const participants = req.body.participants;
 	if (!name || name.length > 100) {
 		return res.status(400).json({ message: 'Channel name must be between 1 and 100 characters' });
@@ -126,7 +126,7 @@ exports.updateChannel = async (req, res) => {
 	const channel = await requireOwner(req, res);
 	if (!channel) return;
 
-	const name = typeof (req.body || {}).name === 'string' ? req.body.name.trim() : '';
+	const name = typeof (req.body ?? {}).name === 'string' ? req.body.name.trim() : '';
 	if (!name || name.length > 100) {
 		return res.status(400).json({ message: 'Channel name must be between 1 and 100 characters' });
 	}
@@ -190,7 +190,7 @@ exports.transferChannelOwnership = async (req, res) => {
 	const channel = await requireOwner(req, res);
 	if (!channel) return;
 
-	const newOwnerId = parseId((req.body || {}).userId);
+	const newOwnerId = parseId((req.body ?? {}).userId);
 	if (!newOwnerId) return res.status(400).json({ message: 'Invalid user ID' });
 	if (!(await channel.hasUser(newOwnerId))) {
 		return res.status(400).json({ message: 'New owner must be a channel member' });
@@ -230,7 +230,7 @@ exports.acceptInvite = async (req, res) => {
 	if (req.user._deleted) {
 		return res.status(403).json({ message: 'Deleted accounts cannot join channels' });
 	}
-	const token = typeof (req.body || {}).token === 'string' ? req.body.token : '';
+	const token = typeof (req.body ?? {}).token === 'string' ? req.body.token : '';
 	if (!token) return res.status(400).json({ message: 'Invite token is required' });
 
 	const secret = getInviteSecret(res);

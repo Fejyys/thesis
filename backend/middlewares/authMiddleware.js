@@ -10,15 +10,13 @@ module.exports = async (req, res, next) => {
     }
 
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = jwt.verify(token, process.env.JWT_SECRET, { ignoreExpiration: false });
         const user = await User.findByPk(decoded.id);
 
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
+        if (!user || user._deleted) {
+            return res.status(401).json({ message: 'User not found' });
         }
-        if (user._deleted) {
-            return res.status(403).json({ message: 'User account is deleted' });
-        }
+
         req.user = user;
         next();
     } catch (error) {
